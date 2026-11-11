@@ -1,0 +1,21 @@
+# Build output
+target/
+*.class
+*.jar
+*.log
+
+# Local tools (download separately)
+tools/
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Secrets / env
+.env
+*.env
+*.pem
+*.key

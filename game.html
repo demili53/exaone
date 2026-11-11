@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>가위바위보 게임</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    background: linear-gradient(135deg, #1e293b, #6366f1);
+    color: #e2e8f0;
+  }
+  .card {
+    width: 100%;
+    max-width: 420px;
+    padding: 24px;
+    border-radius: 20px;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+    text-align: center;
+  }
+  h1 {
+    margin: 0 0 6px;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+  }
+  .sub {
+    margin: 0 0 18px;
+    font-size: 0.875rem;
+    color: #94a3b8;
+  }
+  .scoreboard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .score {
+    padding: 10px 4px;
+    border-radius: 12px;
+    background: rgba(148, 163, 184, 0.12);
+  }
+  .score span {
+    display: block;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-bottom: 2px;
+  }
+  .score strong {
+    font-size: 1.25rem;
+    color: #f8fafc;
+  }
+  #userScore { color: #60a5fa; }
+  #pcScore   { color: #f472b6; }
+  #drawScore { color: #facc15; }
+
+  .result {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    background: rgba(148, 163, 184, 0.1);
+    color: #cbd5e1;
+    margin-bottom: 16px;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .result.win  { background: rgba(74, 222, 128, 0.15); color: #86efac; }
+  .result.lose { background: rgba(248, 113, 113, 0.15); color: #fca5a5; }
+  .result.draw { background: rgba(250, 204, 21, 0.15);  color: #fde047; }
+
+  .choices {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .choices button {
+    padding: 16px 8px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    font-family: inherit;
+    color: #f8fafc;
+    background: rgba(99, 102, 241, 0.9);
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: transform 0.1s ease, filter 0.15s ease;
+  }
+  .choices button:hover { filter: brightness(1.15); }
+  .choices button:active { transform: scale(0.97); }
+
+  .reset {
+    width: 100%;
+    margin-top: 12px;
+    padding: 10px;
+    font-family: inherit;
+    font-size: 0.875rem;
+    color: #cbd5e1;
+    background: transparent;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .reset:hover { background: rgba(148, 163, 184, 0.15); color: #f8fafc; }
+</style>
+</head>
+<body>
+  <main class="card">
+    <h1>✊✌️ 가위바위보</h1>
+    <p class="sub">버튼을 눌러 컴퓨터와 대결하세요!</p>
+
+    <div class="scoreboard">
+      <div class="score"><span>나</span><strong id="userScore">0</strong></div>
+      <div class="score"><span>컴퓨터</span><strong id="pcScore">0</strong></div>
+      <div class="score"><span>무승부</span><strong id="drawScore">0</strong></div>
+    </div>
+
+    <div id="result" class="result">가위, 바위, 보!</div>
+
+    <div class="choices">
+      <button data-choice="가위">✊ 가위</button>
+      <button data-choice="바위">🪨 바위</button>
+      <button data-choice="보">✌️ 보</button>
+    </div>
+
+    <button id="resetBtn" class="reset">기록 초기화</button>
+  </main>
+
+<script>
+  const CHOICES = ["가위", "바위", "보"];
+  const EMOJI = { "가위": "✊", "바위": "🪨", "보": "✌️" };
+
+  const userScoreEl = document.getElementById("userScore");
+  const pcScoreEl = document.getElementById("pcScore");
+  const drawScoreEl = document.getElementById("drawScore");
+  const resultEl = document.getElementById("result");
+  const choiceButtons = document.querySelectorAll(".choices button");
+  const resetBtn = document.getElementById("resetBtn");
+
+  let userScore = 0, pcScore = 0, drawScore = 0;
+
+  function judge(user, pc) {
+    const diff = (CHOICES.indexOf(user) - CHOICES.indexOf(pc) + 3) % 3;
+    if (diff === 1) return "win";
+    if (diff === 2) return "lose";
+    return "draw";
+  }
+
+  function updateScoreboard() {
+    userScoreEl.textContent = userScore;
+    pcScoreEl.textContent = pcScore;
+    drawScoreEl.textContent = drawScore;
+  }
+
+  function play(userChoice) {
+    const pcChoice = CHOICES[Math.floor(Math.random() * CHOICES.length)];
+    const outcome = judge(userChoice, pcChoice);
+    const labels = { win: "이겼습니다! 🎉", lose: "졌습니다… 💀", draw: "비겼습니다 🤝" };
+
+    resultEl.className = "result " + outcome;
+    resultEl.textContent = `${EMOJI[userChoice]} ${userChoice} vs ${EMOJI[pcChoice]} ${pcChoice} — ${labels[outcome]}`;
+
+    if (outcome === "win") userScore++;
+    else if (outcome === "lose") pcScore++;
+    else drawScore++;
+
+    updateScoreboard();
+  }
+
+  choiceButtons.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      play(btn.dataset.choice);
+    });
+  });
+
+  resetBtn.addEventListener("click", function () {
+    userScore = 0; pcScore = 0; drawScore = 0;
+    updateScoreboard();
+    resultEl.className = "result";
+    resultEl.textContent = "가위, 바위, 보!";
+  });
+</script>
+</body>
+</html>
